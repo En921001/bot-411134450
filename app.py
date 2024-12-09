@@ -42,37 +42,24 @@ def callback():
 ##### 基本上程式編輯都在這個function #####
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    message = event.message.text  # Get the message text
+    message = event.message.text  # Correct the variable assignment
 
-    # Define a dictionary with video URLs based on the category
-    video_dict = {
-        '動作片': {
-            'original_content_url': 'https://youtu.be/vrK9VCSslyI',
-            'preview_image_url': 'https://hips.hearstapps.com/hmg-prod/images/chris-hemsworth-extraction-2-642a8d4059737.jpg?resize=980:*'
-        },
-        '動畫': {
-            'original_content_url': 'https://youtu.be/p6h57WqRRl8',
-            'preview_image_url': 'https://p2.bahamut.com.tw/B/2KU/90/18a976106d462f8f0babd9674b1sd9y5.JPG'
-        },
-        '紀錄片': {
-            'original_content_url': 'https://youtu.be/ohwiy6CfzGc',
-            'preview_image_url': 'https://vbmspic.video.friday.tw/STILL/95776/95776_86525_L.jpg'
-        }
-    }
-
-    # Check if the user input matches a valid movie type
-    if message in video_dict:
-        video_message = VideoSendMessage(
-            original_content_url=video_dict[message]['original_content_url'],
-            preview_image_url=video_dict[message]['preview_image_url']
+    if re.match('今天是我的生日', message):  # Matching "今天是我的生日"
+        # Send a birthday greeting image and text message
+        image_message = ImageSendMessage(
+            original_content_url='https://dw-media.dotdotnews.com/dams/product/image/202409/03/66d6a924e4b05e1238102462.png',  # Your birthday image URL
+            preview_image_url='https://dw-media.dotdotnews.com/dams/product/image/202409/03/66d6a924e4b05e1238102462.png'  # Your image preview URL
         )
-        line_bot_api.reply_message(event.reply_token, video_message)  # Send the video
-
+        # Send the birthday message image
+        line_bot_api.reply_message(event.reply_token, image_message)
+        
+        # Send "生日快樂" text message
+        text_message = TextSendMessage(text="生日快樂")  
+        line_bot_api.reply_message(event.reply_token, text_message)
+    
     else:
-        # If the message doesn't match any known category
-        error_message = TextSendMessage(text='抱歉，沒有這類型的影片')
-        line_bot_api.reply_message(event.reply_token, error_message)  # Send the error message
-
+        # Reply with the original message if it's not "今天是我的生日"
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=message))
 
 #主程式
 import os
