@@ -38,6 +38,8 @@ def callback():
 
     return 'OK'
 
+# Enable logging
+logging.basicConfig(level=logging.DEBUG)
 
 # Google Places API Key (replace with your key)
 GOOGLE_API_KEY = 'YOUR_GOOGLE_API_KEY'
@@ -51,9 +53,17 @@ def search_location(query, location="Taiwan", radius=5000):
     # Prepare the Google Places API request URL
     url = f'https://maps.googleapis.com/maps/api/place/textsearch/json?query={query}+in+{location}&radius={radius}&key={GOOGLE_API_KEY}'
     
+    # Log the request URL for debugging
+    logging.debug(f"Request URL: {url}")
+    
     # Send the request to Google Places API
     response = requests.get(url)
-    results = response.json().get('results', [])
+    response_data = response.json()
+    
+    # Log the API response for debugging
+    logging.debug(f"API Response: {response_data}")
+    
+    results = response_data.get('results', [])
     
     # If no results found, return None
     if not results:
@@ -67,16 +77,17 @@ def search_location(query, location="Taiwan", radius=5000):
     longitude = place['geometry']['location']['lng']
     
     return name, address, latitude, longitude
-#訊息傳遞區塊
-##### 基本上程式編輯都在這個function #####
+
+# Handle incoming messages
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     message = event.message.text  # Get the message text
+    logging.debug(f"Received message: {message}")
     
     # If the message contains a location keyword like "公園" or "咖啡廳"
     if re.match(r'公園|咖啡廳', message):  # You can add more keywords to match
         location_data = search_location(message)  # Search using the input message
-
+        
         if location_data:
             name, address, latitude, longitude = location_data
             location_message = LocationSendMessage(
@@ -91,6 +102,7 @@ def handle_message(event):
     else:
         # Default behavior if no match
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="請輸入地名關鍵字 (例如：公園 或 咖啡廳)"))
+
 
 #主程式
 import os
