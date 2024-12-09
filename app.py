@@ -39,12 +39,26 @@ def callback():
 
     return 'OK'
 
-#訊息傳遞區塊
-##### 基本上程式編輯都在這個function #####
+# 訊息處理區塊
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    message = TextSendMessage(text=event.message.text)
-    line_bot_api.reply_message(event.reply_token,message)
+    user_message = event.message.text  # 用戶發送的訊息
+
+    # 根據用戶輸入的訊息進行判斷並回應
+    if user_message == "天氣":
+        reply_message = "請稍等，我幫您查詢天氣資訊！"
+    else:
+        reply_message = "很抱歉，我目前無法理解這個內容。"
+
+    # 回覆用戶訊息
+    line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_message))
+
+#訊息傳遞區塊
+##### 基本上程式編輯都在這個function #####
+#@handler.add(MessageEvent, message=TextMessage)
+#def handle_message(event):
+    #message = TextSendMessage(text=event.message.text)
+    #line_bot_api.reply_message(event.reply_token,message)
 
 #主程式
 import os
