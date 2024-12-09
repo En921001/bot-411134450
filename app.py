@@ -38,27 +38,59 @@ def callback():
 
     return 'OK'
 
+
+# Google Places API Key (replace with your key)
+GOOGLE_API_KEY = 'YOUR_GOOGLE_API_KEY'
+
+# Initialize the LINE Bot API
+line_bot_api = LineBotApi('YOUR_LINE_CHANNEL_ACCESS_TOKEN')
+handler = WebhookHandler('YOUR_LINE_CHANNEL_SECRET')
+
+# Function to search for places using Google Places API
+def search_location(query, location="Taiwan", radius=5000):
+    # Prepare the Google Places API request URL
+    url = f'https://maps.googleapis.com/maps/api/place/textsearch/json?query={query}+in+{location}&radius={radius}&key={GOOGLE_API_KEY}'
+    
+    # Send the request to Google Places API
+    response = requests.get(url)
+    results = response.json().get('results', [])
+    
+    # If no results found, return None
+    if not results:
+        return None
+    
+    # Extract the first result (you can modify this to handle multiple results)
+    place = results[0]
+    name = place.get('name', 'Unknown')
+    address = place.get('formatted_address', 'No address available')
+    latitude = place['geometry']['location']['lat']
+    longitude = place['geometry']['location']['lng']
+    
+    return name, address, latitude, longitude
 #訊息傳遞區塊
 ##### 基本上程式編輯都在這個function #####
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    message = event.message.text  # Correct the variable assignment
-
-    if re.match('今天是我的生日', message):  # Matching "今天是我的生日"
-        # Send a birthday greeting image and text message
-        image_message = ImageSendMessage(
-            original_content_url='https://dw-media.dotdotnews.com/dams/product/image/202409/03/66d6a924e4b05e1238102462.png',  # Your birthday image URL
-            preview_image_url='https://dw-media.dotdotnews.com/dams/product/image/202409/03/66d6a924e4b05e1238102462.png'  # Your image preview URL
-        )
-        # Create a text message for "生日快樂"
-        text_message = TextSendMessage(text="生日快樂")  
-
-        # Send both messages (image and text) as a single reply
-        line_bot_api.reply_message(event.reply_token, [image_message, text_message])
+    message = event.message.text  # Get the message text
     
+    # If the message contains a location keyword like "公園" or "咖啡廳"
+    if re.match(r'公園|咖啡廳', message):  # You can add more keywords to match
+        location_data = search_location(message)  # Search using the input message
+
+        if location_data:
+            name, address, latitude, longitude = location_data
+            location_message = LocationSendMessage(
+                title=name,
+                address=address,
+                latitude=latitude,
+                longitude=longitude
+            )
+            line_bot_api.reply_message(event.reply_token, location_message)
+        else:
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="抱歉，沒有找到相關的地點"))
     else:
-        # If it's not the birthday message, reply with the original message
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=message))
+        # Default behavior if no match
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="請輸入地名關鍵字 (例如：公園 或 咖啡廳)"))
 
 #主程式
 import os
