@@ -10,16 +10,15 @@ from linebot.exceptions import (
     InvalidSignatureError
 )
 from linebot.models import *
-
+import re
 app = Flask(__name__)
 
 # 必須放上自己的Channel Access Token
-line_bot_api = LineBotApi('VCuOHttt9t9s0wFQNL0xCazF2VzVyirr4oUAnVoKssR6q4xcZZJYayNIZmYNwI1dZOyKf3d+6Jfs9/1PyYEZ0pCz5OlmaH69Zn4Ov8+o8HZyOz5F6rM0bgPPdAb3z/dTzmYQT3OUQdv01TNc2ig24AdB04t89/1O/w1cDnyilFU=')
-
+line_bot_api = LineBotApi('uCsEQcK8/n0y6Ry7nNYY2LTMIWRlKRP5Pc5skuVxHUK0kGHPdeMJOGKu6yDC++Mcf0ECgMF2F4mbuFI09sUWo75OU0QFVGNDohhmmY2mQIMizGkTLEkU5gUvWABAdBy0VQjZLQFDCZQ6wrCgfP5fgQdB04t89/1O/w1cDnyilFU=')
 # 必須放上自己的Channel Secret
-handler = WebhookHandler('d7b01a847f2e887fcb0427584630dc86')
+handler = WebhookHandler('0b346da981e91dd30f384a1d8cd46b39')
 
-line_bot_api.push_message('Uffbc7888e974d392e9d5c273b7cd5cb6', TextSendMessage(text='您好,目前時間是 2024/10/10 14:00 ，請問需要什麼服務呢?'))
+line_bot_api.push_message('Uc9bf2374d88a474691d2827c396900f0', TextSendMessage(text='你可以開始了'))
 
 # 監聽所有來自 /callback 的 Post Request
 @app.route("/callback", methods=['POST'])
@@ -39,27 +38,20 @@ def callback():
 
     return 'OK'
 
-# 訊息處理區塊
-@handler.add(MessageEvent, message=TextMessage)
-def handle_message(event):
-    user_message = event.message.text  # 用戶發送的訊息
-
-    # 根據用戶輸入的訊息進行判斷並回應
-    if user_message == "天氣":
-        reply_message = "請稍等，我幫您查詢天氣資訊！"
-    else:
-        reply_message = "很抱歉，我目前無法理解這個內容。"
-
-    # 回覆用戶訊息
-    line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_message))
-
 #訊息傳遞區塊
 ##### 基本上程式編輯都在這個function #####
-#@handler.add(MessageEvent, message=TextMessage)
-#def handle_message(event):
-    #message = TextSendMessage(text=event.message.text)
-    #line_bot_api.reply_message(event.reply_token,message)
-
+@handler.add(MessageEvent, message=TextMessage)
+def handle_message(event):
+    message = text=event.message.text
+    if re.match('告訴我秘密',message):
+        # 貼圖查詢：https://developers.line.biz/en/docs/messaging-api/sticker-list/#specify-sticker-in-message-object
+        sticker_message = StickerSendMessage(
+            package_id='446',
+            sticker_id='2088'
+        )
+        line_bot_api.reply_message(event.reply_token, sticker_message)
+    else:
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(message))
 #主程式
 import os
 if __name__ == "__main__":
