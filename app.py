@@ -51,7 +51,7 @@ def handle_message(event):
             longitude=120.59841178
         )
         line_bot_api.reply_message(event.reply_token, location_message)
-    elif re.match('找美食',message)::
+    elif re.match('找美食',message):
         location_message = LocationSendMessage(
             title='凱恩斯岩燒牛排',
             address='台中',
