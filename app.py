@@ -53,7 +53,7 @@ def handle_message(event):
     else:
         sticker_message = StickerSendMessage(
             package_id='446',
-            sticker_id='2088'
+            sticker_id='2008'
         )
         line_bot_api.reply_message(event.reply_token, sticker_message)
 #主程式
