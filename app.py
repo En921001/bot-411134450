@@ -42,19 +42,22 @@ def callback():
 ##### 基本上程式編輯都在這個function #####
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    message = text=event.message.text
-    if re.match('熱門音樂',message):
+    message = event.message.text  # Correct the variable assignment
+
+    if re.match('熱門音樂', message):  # Matching '熱門音樂'
         audio_message = AudioSendMessage(
             original_content_url='https://youtu.be/GdTSQfxWAGw?list=PL3oW2tjiIxvTUfDOkivqSDxrxfQccwxsN',
             duration=81000
         )
         line_bot_api.reply_message(event.reply_token, audio_message)
-    elif re.match('放鬆音樂',message):
+
+    elif re.match('放鬆音樂', message):  # Matching '放鬆音樂'
         audio_message = AudioSendMessage(
             original_content_url='https://youtu.be/nNyCqdDwJyM',
             duration=81000
         )
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(message))
+        line_bot_api.reply_message(event.reply_token, audio_message)  # Send Audio message for '放鬆音樂'
+
 
 #主程式
 import os
