@@ -42,25 +42,19 @@ def callback():
 ##### 基本上程式編輯都在這個function #####
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    message = event.message.text  # Correct the variable assignment
-
-    if re.match('找景點', message):  # Matching '找景點'
-        location_message = LocationSendMessage(
-            title='台中都會公園',
-            address='台中',
-            latitude=24.20757858,
-            longitude=120.59841178
+    message = text=event.message.text
+    if re.match('熱門音樂',message):
+        audio_message = AudioSendMessage(
+            original_content_url='https://youtu.be/GdTSQfxWAGw?list=PL3oW2tjiIxvTUfDOkivqSDxrxfQccwxsN',
+            duration=81000
         )
-        line_bot_api.reply_message(event.reply_token, location_message)
-
-    elif re.match('找美食', message):  # Matching '找美食'
-        location_message = LocationSendMessage(
-            title='凱恩斯岩燒牛排',
-            address='台中',
-            latitude=24.17230923306469,
-            longitude=120.68563458465492
+        line_bot_api.reply_message(event.reply_token, audio_message)
+    elif re.match('放鬆音樂',message):
+        audio_message = AudioSendMessage(
+            original_content_url='https://youtu.be/nNyCqdDwJyM',
+            duration=81000
         )
-        line_bot_api.reply_message(event.reply_token, location_message)  # Send Location message for '找美食'
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(message))
 
 #主程式
 import os
