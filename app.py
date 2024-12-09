@@ -42,21 +42,23 @@ def callback():
 ##### 基本上程式編輯都在這個function #####
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    message = text=event.message.text
-    if re.match('你好',message):
-        # 貼圖查詢：https://developers.line.biz/en/docs/messaging-api/sticker-list/#specify-sticker-in-message-object
+    message = event.message.text  # Correct variable assignment
+    if re.match('你好', message):
+        # Reply with a sticker
         sticker_message = StickerSendMessage(
             package_id='11537',
             sticker_id='52002738'
         )
         line_bot_api.reply_message(event.reply_token, sticker_message)
-    elif re.match('喜歡',message):
-        # 貼圖查詢：https://developers.line.biz/en/docs/messaging-api/sticker-list/#specify-sticker-in-message-object
+    elif re.match('喜歡', message):
+        # Reply with both sticker and text
         sticker_message = StickerSendMessage(
             package_id='8515',
             sticker_id='16581253'
         )
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(message))
+        text_message = TextSendMessage(text=message)  # reply with the same message text
+        line_bot_api.reply_message(event.reply_token, [sticker_message, text_message])  # send both sticker and text
+
 #主程式
 import os
 if __name__ == "__main__":
