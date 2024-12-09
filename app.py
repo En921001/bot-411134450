@@ -50,15 +50,14 @@ def handle_message(event):
             original_content_url='https://dw-media.dotdotnews.com/dams/product/image/202409/03/66d6a924e4b05e1238102462.png',  # Your birthday image URL
             preview_image_url='https://dw-media.dotdotnews.com/dams/product/image/202409/03/66d6a924e4b05e1238102462.png'  # Your image preview URL
         )
-        # Send the birthday message image
-        line_bot_api.reply_message(event.reply_token, image_message)
-        
-        # Send "生日快樂" text message
+        # Create a text message for "生日快樂"
         text_message = TextSendMessage(text="生日快樂")  
-        line_bot_api.reply_message(event.reply_token, text_message)
+
+        # Send both messages (image and text) as a single reply
+        line_bot_api.reply_message(event.reply_token, [image_message, text_message])
     
     else:
-        # Reply with the original message if it's not "今天是我的生日"
+        # If it's not the birthday message, reply with the original message
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=message))
 
 #主程式
