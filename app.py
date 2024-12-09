@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
 
 #載入LineBot所需要的套件
+import os
+import logging
+import requests
 from flask import Flask, request, abort
-
-from linebot import (
-    LineBotApi, WebhookHandler
-)
-from linebot.exceptions import (
-    InvalidSignatureError
-)
+from linebot import LineBotApi, WebhookHandler
+from linebot.exceptions import InvalidSignatureError
 from linebot.models import *
 import re
 app = Flask(__name__)
@@ -42,41 +40,39 @@ def callback():
 logging.basicConfig(level=logging.DEBUG)
 
 # Google Places API Key (replace with your key)
-GOOGLE_API_KEY = 'YOUR_GOOGLE_API_KEY'
-
-# Initialize the LINE Bot API
-line_bot_api = LineBotApi('YOUR_LINE_CHANNEL_ACCESS_TOKEN')
-handler = WebhookHandler('YOUR_LINE_CHANNEL_SECRET')
+GOOGLE_API_KEY = 'YOUR_GOOGLE_API_KEY'  # Replace with your API key
 
 # Function to search for places using Google Places API
 def search_location(query, location="Taiwan", radius=5000):
-    # Prepare the Google Places API request URL
     url = f'https://maps.googleapis.com/maps/api/place/textsearch/json?query={query}+in+{location}&radius={radius}&key={GOOGLE_API_KEY}'
     
     # Log the request URL for debugging
     logging.debug(f"Request URL: {url}")
     
     # Send the request to Google Places API
-    response = requests.get(url)
-    response_data = response.json()
-    
-    # Log the API response for debugging
-    logging.debug(f"API Response: {response_data}")
-    
-    results = response_data.get('results', [])
-    
-    # If no results found, return None
-    if not results:
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an error for bad responses (e.g., 404, 500)
+        response_data = response.json()
+        
+        # Log the API response for debugging
+        logging.debug(f"API Response: {response_data}")
+        
+        results = response_data.get('results', [])
+        if not results:
+            return None
+        
+        # Extract the first result
+        place = results[0]
+        name = place.get('name', 'Unknown')
+        address = place.get('formatted_address', 'No address available')
+        latitude = place['geometry']['location']['lat']
+        longitude = place['geometry']['location']['lng']
+        
+        return name, address, latitude, longitude
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Error with Google API request: {e}")
         return None
-    
-    # Extract the first result (you can modify this to handle multiple results)
-    place = results[0]
-    name = place.get('name', 'Unknown')
-    address = place.get('formatted_address', 'No address available')
-    latitude = place['geometry']['location']['lat']
-    longitude = place['geometry']['location']['lng']
-    
-    return name, address, latitude, longitude
 
 # Handle incoming messages
 @handler.add(MessageEvent, message=TextMessage)
@@ -103,13 +99,21 @@ def handle_message(event):
         # Default behavior if no match
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text="請輸入地名關鍵字 (例如：公園 或 咖啡廳)"))
 
+# Webhook callback route
+@app.route("/callback", methods=['POST'])
+def callback():
+    signature = request.headers['X-Line-Signature']  # Get the signature
+    body = request.get_data(as_text=True)  # Get the body of the request
+    app.logger.info("Request body: " + body)  # Log the request body for debugging
+    
+    try:
+        handler.handle(body, signature)  # Handle the webhook body
+    except InvalidSignatureError:
+        abort(400)
+    
+    return 'OK'
 
-#主程式
-import os
+# Main program to start the Flask app
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
-
-
-
-
