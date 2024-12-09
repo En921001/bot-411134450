@@ -43,26 +43,32 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     user_message = event.message.text  # 用戶發送的訊息
+    app.logger.info(f"收到用戶訊息: {user_message}")  # Log 輸出用戶訊息
     
     # 根據用戶輸入的內容進行判斷
     if user_message == "心情好":
-        # 這裡的貼圖ID是「笑臉貼圖」的 ID，可以根據需要更換
+        # 這裡的貼圖ID是「笑臉貼圖」的 ID
         sticker_message = StickerSendMessage(
             package_id='11537',  # 包含笑臉貼圖的 package_id
             sticker_id='52002734'  # 笑臉貼圖的 sticker_id
         )
         line_bot_api.reply_message(event.reply_token, sticker_message)
     elif user_message == "心情不好":
-        # 這裡的貼圖ID是「哭泣貼圖」的 ID，可以根據需要更換
+        # 這裡的貼圖ID是「哭泣貼圖」的 ID
         sticker_message = StickerSendMessage(
             package_id='446',  # 包含哭泣貼圖的 package_id
             sticker_id='2088'  # 哭泣貼圖的 sticker_id
         )
-        line_bot_api.reply_message(event.reply_token, sticker_message)
+        try:
+            line_bot_api.reply_message(event.reply_token, sticker_message)
+        except Exception as e:
+            app.logger.error(f"發送貼圖時發生錯誤: {e}")
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="抱歉，發送貼圖時發生錯誤。"))
     else:
         # 如果用戶輸入其他訊息，回覆文本訊息
         reply_message = f"你說的是: {user_message}，但是我不太懂這個意思。"
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_message))
+
 
 # 主程式
 import os
