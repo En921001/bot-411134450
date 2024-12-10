@@ -3,6 +3,7 @@
 # 載入LineBot所需要的套件
 from flask import Flask, request, abort
 from geopy.geocoders import Nominatim
+import geopy
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import *
