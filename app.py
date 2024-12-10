@@ -1,26 +1,46 @@
 # -*- coding: utf-8 -*-
 
-#載入LineBot所需要的套件
+# 載入LineBot所需要的套件
 from flask import Flask, request, abort
-
-from linebot import (
-    LineBotApi, WebhookHandler
-)
-from linebot.exceptions import (
-    InvalidSignatureError
-)
+from geopy.geocoders import Nominatim
+from linebot import LineBotApi, WebhookHandler
+from linebot.exceptions import InvalidSignatureError
 from linebot.models import *
-import re
+import os
+
 app = Flask(__name__)
 
-# 必須放上自己的Channel Access Token
-line_bot_api = LineBotApi('uCsEQcK8/n0y6Ry7nNYY2LTMIWRlKRP5Pc5skuVxHUK0kGHPdeMJOGKu6yDC++Mcf0ECgMF2F4mbuFI09sUWo75OU0QFVGNDohhmmY2mQIMizGkTLEkU5gUvWABAdBy0VQjZLQFDCZQ6wrCgfP5fgQdB04t89/1O/w1cDnyilFU=')
-# 必須放上自己的Channel Secret
-handler = WebhookHandler('0b346da981e91dd30f384a1d8cd46b39')
+# 必須放上自己的 Channel Access Token
+line_bot_api = LineBotApi('+7YfwUC/eTwkZN/ppuj4iMFcqEzyfSz3mkp912pZzYqRl/dQQGSk5CqHUTmyhsxJVbIlHGZ5uaKhpWcBF94m/CLWI7zGkRanEfHwMbbb6wWHrXFfiRaQvYdmGlKcMjcHNSkmyV7W/vYsS7kcoU22dQdB04t89/1O/w1cDnyilFU==')
+# 必須放上自己的 Channel Secret
+handler = WebhookHandler('0f360f872b791eec9ca40c322452e6a7')
 
-line_bot_api.push_message('Uc9bf2374d88a474691d2827c396900f0', TextSendMessage(text='你可以開始了'))
+line_bot_api.push_message('Ue846dc373e7a4eb37266340a870b7d0a', TextSendMessage(text='你可以開始了'))
 
-# 監聽所有來自 /callback 的 Post Request
+# Geopy Geolocator
+geolocator = Nominatim(user_agent="line_bot_location", timeout=10)
+
+# 查詢地名並偏向台灣
+def search_location(query):
+    """
+    使用 Geopy 查詢地名，偏向於台灣地區
+    """
+    try:
+        # 限制搜尋範圍為台灣
+        location = geolocator.geocode(query, country_codes="tw", viewbox=((20.5, 119.5), (25.5, 122.5)), bounded=True)
+        if location:
+            return {
+                'address': location.address,
+                'latitude': location.latitude,
+                'longitude': location.longitude
+            }
+        else:
+            return None
+    except Exception as e:
+        print(f"Geopy error: {e}")
+        return None
+
+# 監聽所有來自 /callback 的 POST Request
 @app.route("/callback", methods=['POST'])
 def callback():
     # get X-Line-Signature header value
@@ -38,29 +58,27 @@ def callback():
 
     return 'OK'
 
-#訊息傳遞區塊
-##### 基本上程式編輯都在這個function #####
+# 訊息傳遞區塊
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    message = event.message.text  # Correct variable assignment
-    if re.match('你好', message):
-        # Reply with a sticker
-        sticker_message = StickerSendMessage(
-            package_id='11537',
-            sticker_id='52002738'
-        )
-        line_bot_api.reply_message(event.reply_token, sticker_message)
-    elif re.match('喜歡', message):
-        # Reply with both sticker and text
-        sticker_message = StickerSendMessage(
-            package_id='8515',
-            sticker_id='16581253'
-        )
-        text_message = TextSendMessage(text=message)  # reply with the same message text
-        line_bot_api.reply_message(event.reply_token, [sticker_message, text_message])  # send both sticker and text
+    message = event.message.text
+    try:
+        # 使用者輸入地名查詢
+        location_data = search_location(message)
+        if location_data:
+            location_message = LocationSendMessage(
+                title=message,
+                address=location_data['address'],
+                latitude=location_data['latitude'],
+                longitude=location_data['longitude']
+            )
+            line_bot_api.reply_message(event.reply_token, location_message)
+        else:
+            line_bot_api.reply_message(event.reply_token, TextSendMessage(text="找不到對應的位置信息，請嘗試其他關鍵字。"))
+    except Exception as e:
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text="系統錯誤，請稍後再試。"))
 
-#主程式
-import os
+# 主程式
 if __name__ == "__main__":
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
