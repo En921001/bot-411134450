@@ -10,10 +10,15 @@ import os
 
 app = Flask(__name__)
 
-# 必須放上自己的Channel Access Token
+# 必須放上自己的 Channel Access Token
 line_bot_api = LineBotApi('VCuOHttt9t9s0wFQNL0xCazF2VzVyirr4oUAnVoKssR6q4xcZZJYayNIZmYNwI1dZOyKf3d+6Jfs9/1PyYEZ0pCz5OlmaH69Zn4Ov8+o8HZyOz5F6rM0bgPPdAb3z/dTzmYQT3OUQdv01TNc2ig24AdB04t89/1O/w1cDnyilFU=')
-# 必須放上自己的Channel Secret
+# 必須放上自己的 Channel Secret
 handler = WebhookHandler('d7b01a847f2e887fcb0427584630dc86')
+
+line_bot_api.push_message('Uffbc7888e974d392e9d5c273b7cd5cb6', TextSendMessage(text='你可以開始了'))
+
+# Geopy Geolocator
+geolocator = Nominatim(user_agent="line_bot_location", timeout=10)
 
 # 查詢地名並偏向台灣
 def search_location(query):
